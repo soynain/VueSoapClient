@@ -1,4 +1,30 @@
-# VueSoapClient
+# SOAP Client made with Vue 3
+
+I thought this was gonna be more difficult, but Javascript still maintaining the XMLHttpRequest for modern frameworks.
+
+The only additions I made in my backend where the @SoapActions intructions for sending from the form the 
+request with it's respective envelopes.
+
+I think I've dominated the soap basics, this protocol It's not common to see more than in pretty big companies
+or special requirements.
+
+Sooo, the design for this thing's pretty simple
+
+![image](https://user-images.githubusercontent.com/78714792/196512191-03cde9ee-f184-444d-b70e-1f9541c57193.png)
+
+Button for creating a new user (top left), modify and deleting users.
+
+![image](https://user-images.githubusercontent.com/78714792/196512257-23db0bab-18ba-4f48-91fc-f1b3df3005e1.png)
+
+Something that I was noticing while doing this is that I've become better at creating html, faster,
+better, easier. I've dominated boostrap components, flex, everything.
+
+![image](https://user-images.githubusercontent.com/78714792/196516412-07842313-8310-4973-83b9-08d0489b4d7d.png)
+
+Interface very simple, getting my Vue levels up.
+
+
+
 
 This template should help get you started developing with Vue 3 in Vite.
 
