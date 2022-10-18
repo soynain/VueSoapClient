@@ -11,7 +11,7 @@ function closeModalAfterRegistry(){
 
 function registerNewUser(){
     let registerUser = new XMLHttpRequest();
-    console.log(nombreCompletoRef.value,edadRef.value);
+    //console.log(nombreCompletoRef.value,edadRef.value);
     registerUser.open("POST", "http://localhost:8080/ws/usuario.wsdl", false);
     registerUser.setRequestHeader("Content-type", "text/xml");
     registerUser.setRequestHeader("SOAPAction", "http://localhost:8080/soap/save-user");
@@ -21,6 +21,7 @@ function registerNewUser(){
             if(registerUser.status===200){
                 console.log(registerUser.responseXML);
                 alert('USUARIO REGISTRADO EXITOSAMENTE');
+                closeModalAfterRegistry();
             }else{
                 alert(registerUser.statusText+' '+registerUser.status);
             }

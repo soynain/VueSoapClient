@@ -2,17 +2,25 @@
 import { getCurrentInstance, provide, ref, type ComponentOptionsBase, type ComponentPublicInstance, type Ref } from "vue";
 import NavBarComponent from "./NavBarComponent.vue";
 import ModalCreateNewUser from "./ModalCreateNewUser.vue";
+import ModalUpdateUser from "./ModalUpdateUser.vue";
 
-interface usuarioAtributtes{
-    id:string,
-    nombreCompleto?:string,
-    edad?:string
+interface usuarioAtributtes {
+    id: string,
+    nombreCompleto?: string,
+    edad?: string
 }
 
-let updateAfterRegistryDone=ref(0) as Ref<number>;
-let xmlResponsebject:Array<usuarioAtributtes> = [];
+let updateAfterRegistryDone = ref(0) as Ref<number>;
 
-function obtenerFetchInicial(){
+let updateAfterUpdateUserDone = ref(0) as Ref<number>;
+let idUserToBeUpdatedRef = ref(0) as Ref<number>;
+
+let xmlResponsebject: Array<usuarioAtributtes> = [];
+
+let cleanTableRowsBeforeUpdatingKey = ref<any>(null);
+let reUpdateTable = ref(0) as Ref<number>;
+
+function obtenerFetchInicial() {
     let bringAllUsuarios = new XMLHttpRequest();
     bringAllUsuarios.open("POST", "http://localhost:8080/ws/usuario.wsdl", false);
     bringAllUsuarios.setRequestHeader("Content-type", "text/xml");
@@ -21,19 +29,26 @@ function obtenerFetchInicial(){
     bringAllUsuarios.onreadystatechange = () => {
         if (bringAllUsuarios.readyState === XMLHttpRequest.DONE) {
             if (bringAllUsuarios.status === 200) {
-                /*Snippet taken from https://stackoverflow.com/questions/27438590/extract-value-from-xml-using-pure-javascript */        
+                /*Snippet taken from https://stackoverflow.com/questions/27438590/extract-value-from-xml-using-pure-javascript */
                 var XMLListIterator = ((((bringAllUsuarios.responseText) as string).match(/<ns2:usuariosLista>(.*?)<\/ns2:usuariosLista>/g)) as RegExpMatchArray);
-                if(XMLListIterator!==undefined || XMLListIterator!==null){
+                if (XMLListIterator !== undefined || XMLListIterator !== null) {
                     XMLListIterator.forEach((value, id) => {
-                        let parsedXMLListElement=XMLListIterator[id].replace(/(<([^>]+)>)/ig, ",").replace(",,","").split(",,");
+                        let parsedXMLListElement = XMLListIterator[id].replace(/(<([^>]+)>)/ig, ",").replace(",,", "").split(",,");
                         xmlResponsebject.push({
-                            'id':parsedXMLListElement[0],
-                            'nombreCompleto':parsedXMLListElement[1],
-                            'edad':parsedXMLListElement[2]
+                            'id': parsedXMLListElement[0],
+                            'nombreCompleto': parsedXMLListElement[1],
+                            'edad': parsedXMLListElement[2]
                         });
                     })
                     console.log(xmlResponsebject);
-                }else{
+                    if (cleanTableRowsBeforeUpdatingKey.value.children.length>0) {
+                        for (let i = 0; i < cleanTableRowsBeforeUpdatingKey.value.children.length; i++) {
+                            cleanTableRowsBeforeUpdatingKey.value?.children[i].replaceChildren();
+                        }
+                    }
+                    //cleanTableRowsBeforeUpdatingKey.value?.replaceChildren();
+                    //reUpdateTable.value++;
+                } else {
                     alert('No hay usuarios en el sistema')
                 }
             } else {
@@ -56,22 +71,22 @@ function obtenerFetchInicial(){
     );
 }
 
-function deleteUsuario(id:number,prueba:any):void{ 
-    let deleteXmlRequest=new XMLHttpRequest();
-    deleteXmlRequest.open('POST','http://localhost:8080/ws/usuario.wdsl',true);
-    deleteXmlRequest.setRequestHeader('Content-type','text/xml');
-    deleteXmlRequest.setRequestHeader('SOAPAction','http://localhost:8080/soap/delete-user');
+function deleteUsuario(id: number, prueba: any): void {
+    let deleteXmlRequest = new XMLHttpRequest();
+    deleteXmlRequest.open('POST', 'http://localhost:8080/ws/usuario.wdsl', true);
+    deleteXmlRequest.setRequestHeader('Content-type', 'text/xml');
+    deleteXmlRequest.setRequestHeader('SOAPAction', 'http://localhost:8080/soap/delete-user');
 
-    deleteXmlRequest.onreadystatechange=()=>{
-        if(deleteXmlRequest.readyState===XMLHttpRequest.DONE){
-            if(deleteXmlRequest.status===200){
+    deleteXmlRequest.onreadystatechange = () => {
+        if (deleteXmlRequest.readyState === XMLHttpRequest.DONE) {
+            if (deleteXmlRequest.status === 200) {
                 console.log(deleteXmlRequest.responseXML);
                 prueba.target.parentElement.parentElement.replaceChildren();
-                alert('USUARIO ELIMINADO');                
-                xmlResponsebject=[];
-                obtenerFetchInicial();
-            }else{
-                alert(deleteXmlRequest.statusText+' '+deleteXmlRequest.status);
+                alert('USUARIO ELIMINADO');
+                //xmlResponsebject = [];
+                //obtenerFetchInicial();
+            } else {
+                alert(deleteXmlRequest.statusText + ' ' + deleteXmlRequest.status);
             }
         }
     }
@@ -86,17 +101,34 @@ function deleteUsuario(id:number,prueba:any):void{
     </Envelope>`);
 }
 
-function openRegistryModal(){
-    updateAfterRegistryDone.value=1;
+function openRegistryModal() {
+    updateAfterRegistryDone.value = 1;
 }
 
+function openUpdateModal(idUserToBeUpdated: any) {
+    idUserToBeUpdatedRef.value = idUserToBeUpdated;
+    updateAfterUpdateUserDone.value = 1;
+}
+
+
+
 obtenerFetchInicial();
-provide('updateAfterRegistryDone',updateAfterRegistryDone);
+
+provide('updateAfterRegistryDone', updateAfterRegistryDone);
+
+provide('updateAfterUpdateUserDone', updateAfterUpdateUserDone);
+provide('idUserToBeUpdatedRef', idUserToBeUpdatedRef);
+
+/*Update the table from the update modal, so the rows get cleaned by just updates*/
+provide('obtenerFetchInicial', obtenerFetchInicial);
 </script>
 
 <template>
     <NavBarComponent />
-    <ModalCreateNewUser v-if="updateAfterRegistryDone===1" :key="updateAfterRegistryDone"/>
+
+    <ModalCreateNewUser v-if="updateAfterRegistryDone===1" :key="updateAfterRegistryDone" />
+    <ModalUpdateUser v-if="updateAfterUpdateUserDone===1" :key="updateAfterUpdateUserDone" />
+
     <section class="d-flex justify-content-around">
         <header class="h3 text-center">SOAP Based crud with spring boot and vue</header>
         <button @click="openRegistryModal()" class="btn btn-primary">Crear nuevo usuario</button>
@@ -111,18 +143,20 @@ provide('updateAfterRegistryDone',updateAfterRegistryDone);
                     <th scope="col">Opciones</th>
                 </tr>
             </thead>
-            <tbody id="clear-table-ins">
+            <tbody id="clear-table-ins" ref="cleanTableRowsBeforeUpdatingKey" :key="reUpdateTable">
                 <tr v-if="xmlResponsebject.length>0" v-for="(item,index) in xmlResponsebject" :key="item.id">
                     <th scope="row">{{item.id}}</th>
                     <td>{{item.nombreCompleto}}</td>
                     <td>{{item.edad}}</td>
-                    <td><button class="btn btn-info">Modificar</button>
-                        <button @click="deleteUsuario(+item.id,$event)"  class="btn btn-danger">Borrar</button></td>
+                    <td>
+                        <button @click="openUpdateModal(+item.id)" class="btn btn-info">Modificar</button>
+                        <button @click="deleteUsuario(+item.id,$event)" class="btn btn-danger">Borrar</button>
+                    </td>
                 </tr>
             </tbody>
         </table>
     </section>
-
-
 </template>
-<style scoped></style>
+<style scoped>
+
+</style>
