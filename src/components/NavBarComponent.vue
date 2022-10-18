@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 const estadoCerrarSesion=ref(0);
-console.log(estadoCerrarSesion.value);
+//console.log(estadoCerrarSesion.value);
 </script>
 <template>
     <header>
